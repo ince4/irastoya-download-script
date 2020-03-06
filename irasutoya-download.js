@@ -5,7 +5,7 @@
 // @description  try to take over the world!
 // @author       ince4
 // @match        https://www.irasutoya.com
-// @match        https://www.irasutoya.com/search/label/*
+// @match        https://www.irasutoya.com/search*
 // @grant        none
 // ==/UserScript==
 
@@ -18,17 +18,12 @@
     if (container != null && img.length > 0) {
         // 样式
         let style = document.createElement("style");
-        style.innerText = `.icon-font{position:absolute;z-index:6;cursor:'pointer';
-                            top:4px;right:4px;}
-                            .icon-font:hover path{fill:#f79833;}
-                            .icon-font path{transition:all .2s}
-                            .boxim .pannel{content:'';width:20px;height:20px;background-color:red;position:absolute;top:30px;right:10px;padding:10px;}`;
+        style.innerText = `.icon-font{position:absolute;z-index:6;cursor:'pointer';top:4px;right:4px;}.icon-font:hover path{fill:#f79833;}.icon-font path{transition:all .2s}.pannel{content:'';background-color: white;box-shadow: 1px 1px 3px 1px #b3b3b3;position:absolute;border-radius: 5px;top:30px;right:10px;padding:10px;font-size: 14px;user-select: none;}input {margin: 10px 0;text-align: center;}.length, .size-display {text-align: center;}.download-btn {text-align: center;border: 1px solid black;border-radius: 4px;line-height: 24px;cursor: pointer;margin-top: 10px;transition: .2s all;}.download-btn:hover {border-color: #f79833;color: #f79833;}`;
         style.type = "text/css";
         document.querySelector('head').appendChild(style);
-
-        // 插入节点
+        // 图标
         let iconGengDuo = `<svg t="1583414314610" class="icon-font" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2505" width="25px" height="25px"><path d="M207.872 512m-79.872 0a79.872 79.872 0 1 0 159.744 0 79.872 79.872 0 1 0-159.744 0Z" fill="#515151" p-id="2506"></path><path d="M512 512m-79.872 0a79.872 79.872 0 1 0 159.744 0 79.872 79.872 0 1 0-159.744 0Z" fill="#515151" p-id="2507"></path><path d="M816.128 512m-79.872 0a79.872 79.872 0 1 0 159.744 0 79.872 79.872 0 1 0-159.744 0Z" fill="#515151" p-id="2508"></path></svg>`;
-        let iconDownLoad = `<svg t="1583406803528" class="icon-font" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1625" width="25px" height="25px"><path d="M1024.00262 643.51v320.074A59.977 59.977 0 0 1 964.46462 1024H59.54162A59.977 59.977 0 0 1 0.00162 963.584V643.511c0-33.353 9.363-53.394 42.277-53.394s43.74 20.04 43.74 53.394v293.961H938.57162V643.511c0-33.353 8.996-53.394 41.91-53.394 32.915 0 43.52 20.04 43.52 53.394z m-554.496-15.579V47.91C469.50662 14.482 480.18662 0 513.10162 0s48.2 14.482 48.2 47.835v580.023L717.97462 464.75c20.992-26.332 53.687-50.176 79.36-21.943 22.674 24.868 17.7 48.786-5.267 72.63l-237.494 246.2a59.1 59.1 0 0 1-85.066 0l-237.494-246.2c-23.04-23.844-19.237-51.93 0-72.63 19.163-20.626 53.76-1.829 76.8 21.943L469.50662 627.93z" p-id="1626" fill="#d37726"></path></svg>`;
+        // 缩略图上设置按钮
         for (let i = 0; i < img.length; i++) {
             let icon = document.createElement('span');
             icon.innerHTML = iconGengDuo;
@@ -38,12 +33,11 @@
             boxim[i].appendChild(icon);
         }
         document.createElement('div.pannel');
-
-        // 事件
-        let isPannelShow = false;
+        // 展开
         let pannel = document.createElement('div');
         pannel.className = 'pannel';
-        // 展开
+        pannel.innerHTML = `<div>尺寸选择</div><label><input type="radio" name="size" value="180" checked>小&nbsp;</label><label><input type="radio" name="size" value="400">中&nbsp;</label><label><input type="radio" name="size" value="800">大&nbsp;</label><label><input id="cus" type="radio" name="size" value="1">自定义</label><div style="display: none;" class="length">边长 <input type="number" min="0" max="800"> px</div><div class="size-display">180 * 180 px</div><div class="download-btn">下载</div>`
+        let isPannelShow = false;
         container.addEventListener('click', e => {
             if (e.target.nodeName === 'svg' || e.target.nodeName === 'path') {
                 if (!isPannelShow) {
@@ -52,20 +46,44 @@
                     let index = e.target.parentNode.dataset.index || e.target.parentNode.parentNode.dataset.index;
                     let src = e.target.parentNode.dataset.src || e.target.parentNode.parentNode.dataset.src;
                     boxim[index].appendChild(pannel);
-
-                    document.addEventListener('click', e2 => {
-                        if (e2.target.className !== 'pannel' && isPannelShow === true) {
-                            isPannelShow = false;
-                            pannel.parentNode.removeChild(pannel);
+                    // 事件
+                    let downloadBtn = document.querySelector('.download-btn');
+                    let lengthBar = document.querySelector('.length');
+                    let sizeDisplay = document.querySelector('.size-display');
+                    let checkedRadio = document.querySelector('input[name="size"]:checked');
+                    let cusInput = lengthBar.querySelector('input[type="number"]');
+                    // 面板显示更新
+                    pannel.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        if (e.target.name === 'size') {
+                          lengthBar.style.display = 'none';
+                          checkedRadio = document.querySelector('input[name="size"]:checked');
+                          sizeDisplay.innerHTML = `${checkedRadio.value} * ${checkedRadio.value} px`;
+                          if (e.target.id === 'cus') {
+                            cusInput.value = 1;
+                            lengthBar.style.display = 'block';
+                          }
                         }
-                    },{once: true})
-                } else {
-                    isPannelShow = false;
-                    pannel.parentNode.removeChild(pannel);
-                }
+                    })
+                    // 面板显示更新
+                    cusInput.addEventListener('change', function(e) {
+                        e.stopPropagation();
+                        this.value = this.value > 800 ? 800 : this.value;
+                        this.value = this.value < 1 ? 1 : this.value;
+                        sizeDisplay.innerHTML = `${this.value} * ${this.value} px`;
+                    })
+                     // 关闭展开
+                     document.addEventListener('click', e2 => {
+                         if (e2.target.className !== 'pannel' && isPannelShow === true) {
+                             isPannelShow = false;
+                             pannel.parentNode.removeChild(pannel);
+                         }
+                     },{once: true})
+                     } else {
+                         isPannelShow = false;
+                         pannel.parentNode.removeChild(pannel);
+                     }
             }
         })
     }
-
-
 })();
